@@ -1,73 +1,117 @@
+
 # Resiliency Patterns
 
-Resilience patterns are critical in building robust applications that can handle failures gracefully. These patterns help ensure that the system remains functional under various failure conditions, providing stability and a better user experience. By using resilience patterns, we can avoid application crashes, minimize downtime, and improve overall system reliability.
+Resilience patterns are critical in building robust applications that can handle failures gracefully. These patterns help ensure that the system remains functional under various failure conditions, providing stability and a better user experience.
 
-This project demonstrates several resilience patterns using Spring Boot.
+By applying these patterns, we can avoid application crashes, minimize downtime, and improve overall system reliability — especially in **distributed systems**.
 
-### 🚀 How to Run
-#### Prerequisites
-1. Java 21
+This project demonstrates several resilience patterns using **Java 21** and **Spring Boot**.
 
-#### Running the Project
+> 💬 *"Failures happen. Deal with it."* — Michael T. Nygard, *Release It!*
+
+---
+
+## 🚀 How to Run
+
+### 🔧 Prerequisites
+
+- Java 21
+
+### ▶️ Running the Project
 
 1. Clone the repository:
 
-`> git clone https://github.com/your-username/resiliency-patterns.git`
-
-`> cd resiliency-patterns`
+   ```bash
+   git clone https://github.com/your-username/resiliency-patterns.git
+   cd resiliency-patterns
+   ```
 
 2. Build and run the application:
 
-`> mvnw spring-boot:run`
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
 ---
 
+## 🧱 Implemented Patterns
 
-## 📌 1. Retry
+| Pattern          | Status   | Description                                       |
+|------------------|----------|---------------------------------------------------|
+| Retry            | ✅ Done  | Automatically retries failed operations           |
+| Circuit Breaker  | 🔜 Coming Soon | Prevents cascading failures by opening a circuit |
+| Timeout          | 🔜 Coming Soon | Limits how long operations can block             |
+| Bulkhead         | 🔜 Coming Soon | Isolates failures to specific components         |
+| Fallback         | 🔜 Coming Soon | Provides default responses on failure            |
 
-Retry is a resilience pattern used to handle temporary failures when executing an operation. Instead of failing immediately, the application retries a defined number of times before giving up.
+---
 
-### 🔹 Implemented Features:
+## 📌 Pattern 1: Retry
 
-- **Automatic Retry**: The service automatically retries the operation up to a maximum number of attempts.
-- **Exponential Backoff**: The wait time between attempts increases exponentially to reduce system overload.
-- **Recovery Method (Recover)**: If all retry attempts fail, an alternative method is triggered to handle the failure in a controlled manner.
+The **Retry** pattern is used to handle **temporary failures** when executing an operation. Instead of failing immediately, the application **retries** a defined number of times before giving up.
 
+### 🔹 Features
 
-Access the API to test the retry mechanism:
+- ✅ Automatic Retry
+- ✅ Exponential Backoff
+- ✅ Recovery Method (`@Recover`)
 
+### 🧪 How to Test
+
+Call the retry endpoint:
+
+```bash
 curl http://localhost:8080/api/retry
+```
 
-If the operation fails multiple times, the logs will display the retry attempts with progressively increasing wait times.
+If the operation fails multiple times, the logs will show retry attempts with **increasing delays** between each try.
 
-📖 Code Explanation
+### 💡 Configuration Overview
 
-The Retry mechanism is configured in the UnstableService class using the @Retryable annotation:
-
+```java
 @Retryable(
-maxAttempts = 3,
-value = RuntimeException.class,
-backoff = @Backoff(delay = 1000, multiplier = 2.0)
+    maxAttempts = 3,
+    value = RuntimeException.class,
+    backoff = @Backoff(delay = 1000, multiplier = 2.0)
 )
+public String unstableMethod() {
+    // simulated failure
+}
+```
 
-How does this configuration work?
+- `maxAttempts = 3`: Tries up to 3 times.
+- `value = RuntimeException.class`: Retries only on that exception.
+- `backoff`: Implements **exponential backoff** (1s → 2s → 4s).
 
-maxAttempts = 3: The method will be retried up to 3 times before failing.
+### 🛠 Recovery Strategy
 
-value = RuntimeException.class: Only failures of this type trigger the retry mechanism.
+When all attempts fail, a fallback is triggered using `@Recover`:
 
-backoff = @Backoff(delay = 1000, multiplier = 2.0): Defines a progressive wait time between retry attempts:
-
-First failure → waits 1 second
-
-Second failure → waits 2 seconds
-
-Third failure → waits 4 seconds
-
-If all attempts fail, the recoverMethod is called:
-
+```java
 @Recover
 public String recoverMethod(RuntimeException e) {
-return "Definitive failure after multiple attempts. Providing alternative response.";
+    return "Definitive failure after multiple attempts. Providing alternative response.";
 }
+```
 
-This method provides an alternative response to prevent uncontrolled failures in the application.
+This ensures the application degrades gracefully, instead of propagating the failure.
+
+---
+
+## 📚 References
+
+- *Release It!* – Michael T. Nygard
+- *Designing Data-Intensive Applications* – Martin Kleppmann
+- [Spring Retry Documentation](https://docs.spring.io/spring-retry/docs/current/reference/html/)
+
+---
+
+## 📅 What's Next?
+
+More patterns coming soon:
+- Circuit Breaker with Resilience4j
+- Timeout using CompletableFuture and WebClient
+- Bulkhead isolation techniques
+- Fallback strategies
+
+Stay tuned! 💥
